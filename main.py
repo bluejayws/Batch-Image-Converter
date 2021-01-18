@@ -23,7 +23,7 @@ def concatenateFileName(image_num, saveFolder):
 def concatenate_link(link):
     return "" + link
 
-
+ 
 if __name__ == '__main__':
     sg.theme('DarkPurple3')
     #Get parameters
