@@ -23,7 +23,7 @@ def concatenateFileName(image_num, saveFolder):
 def concatenate_link(link):
     return "" + link
 
- 
+
 if __name__ == '__main__':
     sg.theme('DarkPurple3')
     #Get parameters
@@ -50,10 +50,10 @@ if __name__ == '__main__':
     for link in list_of_links:
         try:
             urllib.request.urlretrieve(concatenate_link(link), concatenateFileName(image_num, saveFolder))
+            image_num += 1
         except HTTPError as httperr:
             if httperr.code == 404:
                 print(concatenate_link(link) + " not downloaded! 404 Error for the link")
-                image_num += 1
 
         #urllib.request.urlretrieve(concatenate_link(link), concatenateFileName(image_num,saveFolder))
         #image_num += 1
