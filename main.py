@@ -9,6 +9,7 @@ import urllib.request
 import PySimpleGUI as sg
 import sys
 from urllib.error import HTTPError
+import random
 
 #Reads a text file with links in them, one link per line.
 #Returns a list with these links
@@ -18,7 +19,11 @@ def parse_links_text(text_source):
 
 #Returns a name for a given photo number and folder location
 def concatenateFileName(image_num, saveFolder):
-    return saveFolder+"\\"+"foto#"+str(image_num)+".jpg"
+    # "foto#3.jpg" for example
+    #return saveFolder+"\\"+"foto#"+str(image_num)+".jpg"
+
+    #"IMG_6813" for example
+    return saveFolder + "\\" + "IMG_" + str(random.randint(1111,9999)) + ".jpg"
 
 def concatenate_link(link):
     return "" + link
@@ -54,8 +59,11 @@ if __name__ == '__main__':
         except HTTPError as httperr:
             if httperr.code == 404:
                 print(concatenate_link(link) + " not downloaded! 404 Error for the link")
+            #elif httperr.code ==
 
         #urllib.request.urlretrieve(concatenate_link(link), concatenateFileName(image_num,saveFolder))
         #image_num += 1
+
+        #Inteprets empty space as a link...how to avoid?
 
 
