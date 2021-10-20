@@ -2,7 +2,7 @@
 #@author agbjr
 #
 #
-#
+#ToDo: Add an option to convert images in a folder to a different image file type
 #
 
 import urllib.request
