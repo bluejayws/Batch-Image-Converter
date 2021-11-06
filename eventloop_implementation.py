@@ -196,9 +196,5 @@ while True:
                 #im1.save(path)
 
 
-# /Users/antoniogurrola-beltran/Desktop/TEST BATCH DOWNLOAD/TEST DESTINATION FOLDER
-
-# /Users/antoniogurrola-beltran/Desktop/PIT/TEST DESTINATION FOLDER/IMG_6409.jpg
-
 
 window.close()
