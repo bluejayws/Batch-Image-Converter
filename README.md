@@ -1,4 +1,4 @@
 ## Random Image Tools 📸 🔨
 ____
-**Features: **
+**Features:**
 * Convert all images in a folder to png
