@@ -11,11 +11,9 @@ from PyQt6.QtWidgets import (
     QLabel, QHBoxLayout, QWidget, QFileDialog, QPushButton, QVBoxLayout, QProgressBar,
 )
 
-# Takes a path name to an image file and returns a new path name with the extension changed to .png
+
 # ToDo: Add support for more than png (?)
-from PyQt6.uic.properties import QtCore
-
-
+# Takes a path name to an image file and returns a new path name with the extension changed to .png
 def rename_to_png(path):
     split_file_at_dot = path.split(".")
     new_path = split_file_at_dot[0] + "_PNG.png"
@@ -110,11 +108,14 @@ class MainWindow(QMainWindow):
 
         for root, dirs, files in os.walk(self.directory_path_name, topdown=True):
             for filename in files:
-                if '.jpg' in filename:
-                    absolute_path = self.directory_path_name + filename
-                    # Avoid adding duplicates
-                    if absolute_path not in image_list:
-                        image_list.append(absolute_path)
+
+                if '.jpeg' or '.jpg' or '.webp' or '.gif' or '.icns' in filename:
+                    if '.png' not in filename:
+                        # print("Added : " + filename + " to our conversion list")
+                        absolute_path = self.directory_path_name + filename
+                        # Avoid adding duplicates
+                        if absolute_path not in image_list:
+                            image_list.append(absolute_path)
 
         return image_list
 
@@ -126,7 +127,7 @@ class MainWindow(QMainWindow):
     # ToDo: Selecting a directory and display a window showing contents
     # Todo: Store png images in a new folder?
     # Todo: Add option to delete jpg images
-    # Todo: Add a popup or some sort of progress mechaniism to delete photos : A checkbox
+    # Todo: Add a popup or some sort of progress mechanism to delete photos : A checkbox
     def convert_folder_to_png(self):
 
         self.conversion_finished_or_error_label.setText("Converting")
@@ -139,14 +140,14 @@ class MainWindow(QMainWindow):
         if len(image_list) > 0:
             self.conversion_finished_or_error_label.setText("...")
             # Convert images
-            for jpg_image_path in image_list:
-
+            for image_path in image_list:
                 # Get absolute path
-                abs_path = os.path.abspath(jpg_image_path)
-
-                # Save as png
-                jpg_image_to_png = Image.open(abs_path)
-                jpg_image_to_png.save(rename_to_png(abs_path))
+                abs_path = os.path.abspath(image_path)
+                if ".DS_Store" not in abs_path:
+                    # Save as png
+                    # print("Converting  " + abs_path + "to png" )
+                    image_to_png = Image.open(abs_path)
+                    image_to_png.save(rename_to_png(abs_path))
 
             self.conversion_finished_or_error_label.setText("Conversion finished")
 
