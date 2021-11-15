@@ -67,6 +67,7 @@ class MainWindow(QMainWindow):
         self.conversion_finished_or_error_label.setText("👀 waiting for you to press \"Convert to PNG\" ")
 
         self.conversion_progress_bar = QProgressBar()
+        self.conversion_progress_bar.setMinimum(0)
         self.conversion_progress_bar.hide()
 
         # Put the find folder button and folder selected button together
@@ -93,7 +94,8 @@ class MainWindow(QMainWindow):
     def select_folder_prompt(self):
         # Append a "/" otherwise it will mix the folder name and containing image file together
         directory = str(QFileDialog.getExistingDirectory(self, "Select Directory")) + "/"
-        # Note to self: You already passed the object. Just store the string into the object and update it there
+
+        # Update QLabel to new directory, and store it in self for future use
         self.directory_label.setText(directory)
         self.directory_path_name = directory
 
@@ -101,17 +103,11 @@ class MainWindow(QMainWindow):
     def open_folder(self):
         subprocess.call(["open", "-R", self.directory_path_name])
 
-    # Given a non-empty folder path, converts all jpg images in it to png.
-    def convert_folder_to_png(self):
-        # ToDo: Remove duplicate adding of image paths to image_list
-        # Todo: Add conversion to PNG of other file types, f.ex gif, webmp, etc
-        # ToDo: Selecting a directory and display a window showing contents
-
-
-        self.conversion_finished_or_error_label.setText("Converting")
-
-        # Get list of image files in the given folder
+    # Given the current state of the directory_path_name folder, will scan for image files in that folder
+    # Just scans .jpg for now
+    def scan_for_jpg_file_paths(self):
         image_list = []
+
         for root, dirs, files in os.walk(self.directory_path_name, topdown=True):
             for filename in files:
                 if '.jpg' in filename:
@@ -120,20 +116,48 @@ class MainWindow(QMainWindow):
                     if absolute_path not in image_list:
                         image_list.append(absolute_path)
 
-        # Progress bar depends on independent variable, length of image list = x
-        self.conversion_progress_bar.setMaximum(len(image_list))
+        return image_list
 
-        # Loop invariant: If we're in this function call, then we're converting folder images to PNG
-        # Loop invariant: There's at least one item in the array
+    # Given a non-empty folder path, converts all jpg images in it to png.
+    # ToDo: Let user know that folder had no jpeg files in it, or any other type.
+    #  print("There are no .jpeg, or image files in this folder")
+    # ToDo: Remove duplicate adding of image paths to image_list
+    # Todo: Add conversion to PNG of other file types, f.ex gif, webmp, etc
+    # ToDo: Selecting a directory and display a window showing contents
+    # Todo: Store png images in a new folder?
+    # Todo: Add option to delete jpg images
+    # Todo: Add a popup or some sort of progress mechaniism to delete photos : A checkbox
+    def convert_folder_to_png(self):
+
+        self.conversion_finished_or_error_label.setText("Converting")
+
+        # Get list of image files in the given folder
+        image_list = self.scan_for_jpg_file_paths()
+
+        # Progress bar depends on independent variable, length of image list = x
 
         if len(image_list) > 0:
-            # print("converting flag")
-            # self.conversion_finished_or_error_label.setText("Converting...")
+            progress_bar_counter = 0;
 
+            self.conversion_progress_bar.reset()
+            # Progress bar depends on independent variable, length of image list = x
+            self.conversion_progress_bar.setMaximum(len(image_list))
             self.conversion_progress_bar.setValue(0)
             self.conversion_progress_bar.show()
 
+            # Since in the current_percentage calculation, the only thing that updates is the value()
+            current_percentage_denominator = self.conversion_progress_bar.maximum() - self.conversion_progress_bar.\
+                minimum()
+
             for jpg_image_path in image_list:
+
+                # To quote pyqt6 docs, "The percentage is calculated by dividing the progress ( value() - minimum() )
+                # divided by maximum() - minimum() ."
+                current_percentage = (self.conversion_progress_bar.value() - self.conversion_progress_bar.minimum()) \
+                                     / current_percentage_denominator
+                print(current_percentage)
+                self.conversion_progress_bar.setValue(int(current_percentage))
+
                 # Get absolute path
                 abs_path = os.path.abspath(jpg_image_path)
 
@@ -141,16 +165,12 @@ class MainWindow(QMainWindow):
                 jpg_image_to_png = Image.open(abs_path)
                 jpg_image_to_png.save(rename_to_png(abs_path))
 
-                # Todo: Store png images in a new folder?
-                # Todo: Add option to delete jpg images
-                # Todo: Add a popup or some sort of progress mechaniism to delete photos : A checkbox
-                print("Finished converting flag")
+            print("Finished converting flag")
+            self.conversion_progress_bar.hide()
             self.conversion_finished_or_error_label.setText("Conversion finished")
 
         if len(image_list) <= 0:
             self.conversion_progress_bar.hide()
-            # ToDo: Let user know that folder had no jpeg files in it, or any other type.
-            #  print("There are no .jpeg, or image files in this folder")
             self.conversion_finished_or_error_label.setText("There are no .jpeg, or image files in this folder")
 
 
