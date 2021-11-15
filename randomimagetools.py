@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("📸 Random Image Tools V1.2 🔨")
-        self.selected_folder_stored_paths = []
+        self.image_list = []
         # ToDo: Add a "rename?" flag. Like rename image files
 
         # to store the directory path for later use
@@ -59,8 +59,8 @@ class MainWindow(QMainWindow):
         self.select_a_folder_button.show()
 
         # Displays the image contents of the selected folder
-        self.image_contents_of_selected_folder = QListWidget()
-        self.image_contents_of_selected_folder.show()
+        self.image_paths_list_widget = QListWidget()
+        self.image_paths_list_widget.show()
 
         # Displays button to initiate image conversion
         self.convert_to_png_button = QPushButton()
@@ -92,7 +92,7 @@ class MainWindow(QMainWindow):
         layer_one.addWidget(self.directory_label)
 
         # Image paths of selected folder
-        layer_one_and_a_half.addWidget(self.image_contents_of_selected_folder)
+        layer_one_and_a_half.addWidget(self.image_paths_list_widget)
 
         # Put the convert button and open-in-finder button together
         layer_two_vertical_one.addWidget(self.convert_to_png_button)
@@ -118,12 +118,24 @@ class MainWindow(QMainWindow):
 
     # Prompts user to select a folder, stores the given folder path and displays chosen path to user
     def select_folder_prompt(self):
+
+        # ToDo: Clear items and repopulate with other set of items after selecting a new folder.
+        self.image_list.clear()
+        self.image_paths_list_widget.clear()
+
         # Append a "/" otherwise it will mix the folder name and containing image file together
         directory = str(QFileDialog.getExistingDirectory(self, "Select Directory")) + "/"
-
         # Update QLabel to new directory, and store it in self for future use
         self.directory_label.setText(directory)
         self.directory_path_name = directory
+
+        # Update self.image_list field
+        image_list = self.scan_for_jpg_file_paths()
+        self.image_list = image_list
+
+        # Populated the QListWindow() with the update self.image_list field
+        self.image_paths_list_widget.addItems(self.image_list)
+
 
     # Given a path name, will open it in the Folder browser app
     def open_folder(self):
@@ -152,19 +164,22 @@ class MainWindow(QMainWindow):
     # Todo: Store png images in a new folder?
     # ToDo: Add a "Delete images after converting?"
     # ToDo: Add functionality for checkboxes
+    # Ok so that the QListWidget can update, I'm going to have to get the image_list before calling this function.
+    # In other words, image_list is a field in the MainWindow subclass, and is update after selecting the folder, and
+    #   called before calling this function.
     def convert_folder_to_png(self):
 
         self.conversion_finished_or_error_label.setText("Converting")
 
         # Get list of image files in the given folder
-        image_list = self.scan_for_jpg_file_paths()
+        # image_list = self.scan_for_jpg_file_paths()
 
         # Progress bar depends on independent variable, length of image list = x
 
-        if len(image_list) > 0:
+        if len(self.image_list) > 0:
             self.conversion_finished_or_error_label.setText("...")
             # Convert images
-            for image_path in image_list:
+            for image_path in self.image_list:
                 # Get absolute path
                 abs_path = os.path.abspath(image_path)
                 if ".DS_Store" not in abs_path:
@@ -175,7 +190,7 @@ class MainWindow(QMainWindow):
 
             self.conversion_finished_or_error_label.setText("Conversion finished")
 
-        if len(image_list) <= 0:
+        if len(self.image_list) <= 0:
             self.conversion_finished_or_error_label.setText("There are no image files in this folder")
 
 
