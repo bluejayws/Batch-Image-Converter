@@ -8,7 +8,7 @@ from PIL import Image
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QMainWindow, QApplication,
-    QLabel, QHBoxLayout, QWidget, QFileDialog, QPushButton, QVBoxLayout, QProgressBar, QCheckBox,
+    QLabel, QHBoxLayout, QWidget, QFileDialog, QPushButton, QVBoxLayout, QProgressBar, QCheckBox, QListWidget,
 )
 
 
@@ -24,6 +24,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("📸 Random Image Tools V1.2 🔨")
+        self.selected_folder_stored_paths = []
         # ToDo: Add a "rename?" flag. Like rename image files
 
         # to store the directory path for later use
@@ -32,11 +33,11 @@ class MainWindow(QMainWindow):
         # Set up the layouts
         layer_one = QHBoxLayout()  # First line of buttons
 
-        layer_one_and_a_half = QHBoxLayout() # To Store file window
+        layer_one_and_a_half = QHBoxLayout()  # To Store file window
 
         layer_two = QHBoxLayout()  # Second line of buttons
-        layer_two_vertical_one = QVBoxLayout() # Store the first column w/checkbox
-        layer_two_vertical_two = QVBoxLayout() # Store the second column w/checkbox
+        layer_two_vertical_one = QVBoxLayout()  # Store the first column w/checkbox
+        layer_two_vertical_two = QVBoxLayout()  # Store the second column w/checkbox
 
         layer_three = QHBoxLayout()
         #         login_form_layout.setFormAlignment(Qt.AlignCenter)
@@ -45,7 +46,6 @@ class MainWindow(QMainWindow):
 
         # Parent widget
         widget = QWidget()
-
 
         # Displays selected directory
         self.directory_label = QLabel()
@@ -57,6 +57,10 @@ class MainWindow(QMainWindow):
         self.select_a_folder_button.setText("Select a folder:")
         self.select_a_folder_button.clicked.connect(self.select_folder_prompt)
         self.select_a_folder_button.show()
+
+        # Displays the image contents of the selected folder
+        self.image_contents_of_selected_folder = QListWidget()
+        self.image_contents_of_selected_folder.show()
 
         # Displays button to initiate image conversion
         self.convert_to_png_button = QPushButton()
@@ -73,7 +77,6 @@ class MainWindow(QMainWindow):
         self.delete_original_files_checkbox.setText("Delete original files after converting them to PNG?")
         self.create_new_folder_checkbox.show()
 
-
         # Displays button to open selected directory in the file browser
         self.show_folder_button = QPushButton()
         self.show_folder_button.setText("Open selected folder in file browser")
@@ -88,18 +91,17 @@ class MainWindow(QMainWindow):
         layer_one.addWidget(self.select_a_folder_button)
         layer_one.addWidget(self.directory_label)
 
+        # Image paths of selected folder
+        layer_one_and_a_half.addWidget(self.image_contents_of_selected_folder)
+
         # Put the convert button and open-in-finder button together
-        #layer_two.addWidget(self.convert_to_png_button)
         layer_two_vertical_one.addWidget(self.convert_to_png_button)
         layer_two_vertical_one.addWidget(self.delete_original_files_checkbox)
-        # layer_two_vertical_two.addWidget(self.create_new_folder_checkbox)
         layer_two.addLayout(layer_two_vertical_one)
 
         layer_two_vertical_two.addWidget(self.show_folder_button)
         layer_two_vertical_two.addWidget(self.create_new_folder_checkbox)
         layer_two.addLayout(layer_two_vertical_two)
-
-        # layer_two.addWidget(self.show_folder_button)
 
         # Label and progress bar
         layer_three.addWidget(self.conversion_finished_or_error_label)
@@ -107,6 +109,7 @@ class MainWindow(QMainWindow):
 
         # Put the "convert to png" button beneath
         vertical_layout_parent.addLayout(layer_one)
+        vertical_layout_parent.addLayout(layer_one_and_a_half)
         vertical_layout_parent.addLayout(layer_two)
         vertical_layout_parent.addLayout(layer_three)
 
