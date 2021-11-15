@@ -8,11 +8,10 @@ from PIL import Image
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QMainWindow, QApplication,
-    QLabel, QHBoxLayout, QWidget, QFileDialog, QPushButton, QVBoxLayout, QProgressBar,
+    QLabel, QHBoxLayout, QWidget, QFileDialog, QPushButton, QVBoxLayout, QProgressBar, QCheckBox,
 )
 
 
-# ToDo: Add support for more than png (?)
 # Takes a path name to an image file and returns a new path name with the extension changed to .png
 def rename_to_png(path):
     split_file_at_dot = path.split(".")
@@ -32,7 +31,13 @@ class MainWindow(QMainWindow):
 
         # Set up the layouts
         layer_one = QHBoxLayout()  # First line of buttons
+
+        layer_one_and_a_half = QHBoxLayout() # To Store file window
+
         layer_two = QHBoxLayout()  # Second line of buttons
+        layer_two_vertical_one = QVBoxLayout() # Store the first column w/checkbox
+        layer_two_vertical_two = QVBoxLayout() # Store the second column w/checkbox
+
         layer_three = QHBoxLayout()
         #         login_form_layout.setFormAlignment(Qt.AlignCenter)
         # layer_three.setFormAlignment()
@@ -40,6 +45,7 @@ class MainWindow(QMainWindow):
 
         # Parent widget
         widget = QWidget()
+
 
         # Displays selected directory
         self.directory_label = QLabel()
@@ -58,6 +64,16 @@ class MainWindow(QMainWindow):
         self.convert_to_png_button.clicked.connect(self.convert_folder_to_png)
         self.convert_to_png_button.show()
 
+        # Check boxes for "Create new folder for PNGs" and "Delete original files after converting"
+        self.create_new_folder_checkbox = QCheckBox()
+        self.create_new_folder_checkbox.setText("Create new folder to store converted PNG's?")
+        self.create_new_folder_checkbox.show()
+
+        self.delete_original_files_checkbox = QCheckBox()
+        self.delete_original_files_checkbox.setText("Delete original files after converting them to PNG?")
+        self.create_new_folder_checkbox.show()
+
+
         # Displays button to open selected directory in the file browser
         self.show_folder_button = QPushButton()
         self.show_folder_button.setText("Open selected folder in file browser")
@@ -73,8 +89,17 @@ class MainWindow(QMainWindow):
         layer_one.addWidget(self.directory_label)
 
         # Put the convert button and open-in-finder button together
-        layer_two.addWidget(self.convert_to_png_button)
-        layer_two.addWidget(self.show_folder_button)
+        #layer_two.addWidget(self.convert_to_png_button)
+        layer_two_vertical_one.addWidget(self.convert_to_png_button)
+        layer_two_vertical_one.addWidget(self.delete_original_files_checkbox)
+        # layer_two_vertical_two.addWidget(self.create_new_folder_checkbox)
+        layer_two.addLayout(layer_two_vertical_one)
+
+        layer_two_vertical_two.addWidget(self.show_folder_button)
+        layer_two_vertical_two.addWidget(self.create_new_folder_checkbox)
+        layer_two.addLayout(layer_two_vertical_two)
+
+        # layer_two.addWidget(self.show_folder_button)
 
         # Label and progress bar
         layer_three.addWidget(self.conversion_finished_or_error_label)
@@ -120,14 +145,10 @@ class MainWindow(QMainWindow):
         return image_list
 
     # Given a non-empty folder path, converts all jpg images in it to png.
-    # ToDo: Let user know that folder had no jpeg files in it, or any other type.
-    #  print("There are no .jpeg, or image files in this folder")
-    # ToDo: Remove duplicate adding of image paths to image_list
-    # Todo: Add conversion to PNG of other file types, f.ex gif, webmp, etc
     # ToDo: Selecting a directory and display a window showing contents
     # Todo: Store png images in a new folder?
-    # Todo: Add option to delete jpg images
-    # Todo: Add a popup or some sort of progress mechanism to delete photos : A checkbox
+    # ToDo: Add a "Delete images after converting?"
+    # ToDo: Add functionality for checkboxes
     def convert_folder_to_png(self):
 
         self.conversion_finished_or_error_label.setText("Converting")
