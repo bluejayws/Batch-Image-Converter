@@ -1,9 +1,11 @@
 # coded by: @bluejayws (Antonio G-B), w/help from the internet, stackoverflow, etc.
+# icons used are made by: Freepik,
 import os
 import sys
 import subprocess
 
 from PIL import Image
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QMainWindow, QApplication,
     QLabel, QHBoxLayout, QWidget, QFileDialog, QPushButton, QVBoxLayout, QProgressBar,
@@ -34,9 +36,11 @@ class MainWindow(QMainWindow):
         layer_one = QHBoxLayout()  # First line of buttons
         layer_two = QHBoxLayout()  # Second line of buttons
         layer_three = QHBoxLayout()
+        #         login_form_layout.setFormAlignment(Qt.AlignCenter)
+        # layer_three.setFormAlignment()
         vertical_layout_parent = QVBoxLayout()
 
-        # Main widget
+        # Parent widget
         widget = QWidget()
 
         # Displays selected directory
@@ -66,10 +70,6 @@ class MainWindow(QMainWindow):
         self.conversion_finished_or_error_label = QLabel()
         self.conversion_finished_or_error_label.setText("👀 waiting for you to press \"Convert to PNG\" ")
 
-        self.conversion_progress_bar = QProgressBar()
-        self.conversion_progress_bar.setMinimum(0)
-        self.conversion_progress_bar.hide()
-
         # Put the find folder button and folder selected button together
         layer_one.addWidget(self.select_a_folder_button)
         layer_one.addWidget(self.directory_label)
@@ -80,7 +80,7 @@ class MainWindow(QMainWindow):
 
         # Label and progress bar
         layer_three.addWidget(self.conversion_finished_or_error_label)
-        layer_three.addWidget(self.conversion_progress_bar)
+        layer_three.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
         # Put the "convert to png" button beneath
         vertical_layout_parent.addLayout(layer_one)
@@ -137,26 +137,9 @@ class MainWindow(QMainWindow):
         # Progress bar depends on independent variable, length of image list = x
 
         if len(image_list) > 0:
-            progress_bar_counter = 0;
-
-            self.conversion_progress_bar.reset()
-            # Progress bar depends on independent variable, length of image list = x
-            self.conversion_progress_bar.setMaximum(len(image_list))
-            self.conversion_progress_bar.setValue(0)
-            self.conversion_progress_bar.show()
-
-            # Since in the current_percentage calculation, the only thing that updates is the value()
-            current_percentage_denominator = self.conversion_progress_bar.maximum() - self.conversion_progress_bar.\
-                minimum()
-
+            self.conversion_finished_or_error_label.setText("...")
+            # Convert images
             for jpg_image_path in image_list:
-
-                # To quote pyqt6 docs, "The percentage is calculated by dividing the progress ( value() - minimum() )
-                # divided by maximum() - minimum() ."
-                current_percentage = (self.conversion_progress_bar.value() - self.conversion_progress_bar.minimum()) \
-                                     / current_percentage_denominator
-                print(current_percentage)
-                self.conversion_progress_bar.setValue(int(current_percentage))
 
                 # Get absolute path
                 abs_path = os.path.abspath(jpg_image_path)
@@ -165,13 +148,10 @@ class MainWindow(QMainWindow):
                 jpg_image_to_png = Image.open(abs_path)
                 jpg_image_to_png.save(rename_to_png(abs_path))
 
-            print("Finished converting flag")
-            self.conversion_progress_bar.hide()
             self.conversion_finished_or_error_label.setText("Conversion finished")
 
         if len(image_list) <= 0:
-            self.conversion_progress_bar.hide()
-            self.conversion_finished_or_error_label.setText("There are no .jpeg, or image files in this folder")
+            self.conversion_finished_or_error_label.setText("There are no image files in this folder")
 
 
 app = QApplication(sys.argv)
