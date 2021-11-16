@@ -8,15 +8,25 @@ from PIL import Image
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QMainWindow, QApplication,
-    QLabel, QHBoxLayout, QWidget, QFileDialog, QPushButton, QVBoxLayout, QProgressBar, QCheckBox, QListWidget,
+    QLabel, QHBoxLayout, QWidget, QFileDialog, QPushButton, QVBoxLayout, QCheckBox, QListWidget,
 )
 
 
+# ToDo: After selecting item in QListWidget, and double clicking it, will open the image file
+
+
 # Takes a path name to an image file and returns a new path name with the extension changed to .png
-def rename_to_png(path):
+def rename_image_path_to_png(path):
     split_file_at_dot = path.split(".")
     new_path = split_file_at_dot[0] + "_PNG.png"
     return new_path
+
+# Given a filepath to an image, will extract the filename and it's extension
+# Used for storing PNG files when the "Create new folder?" checkbox is checked
+def extract_image_name_and_extension(path) :
+    split_file_at_slash = path.split('/')
+    print("EXTRACTED: " + split_file_at_slash[len(split_file_at_slash)-1])
+    return split_file_at_slash[len(split_file_at_slash)-1]
 
 
 class MainWindow(QMainWindow):
@@ -31,17 +41,15 @@ class MainWindow(QMainWindow):
         self.directory_path_name = "/"
 
         # Set up the layouts
-        layer_one = QHBoxLayout()  # First line of buttons
+        layer_one = QHBoxLayout()  # Select a folder, selected directory
 
-        layer_one_and_a_half = QHBoxLayout()  # To Store file window
+        layer_one_and_a_half = QHBoxLayout()  # Selected directory contents
 
         layer_two = QHBoxLayout()  # Second line of buttons
-        layer_two_vertical_one = QVBoxLayout()  # Store the first column w/checkbox
-        layer_two_vertical_two = QVBoxLayout()  # Store the second column w/checkbox
+        layer_two_vertical_one = QVBoxLayout()  # Store the first column w/checkbox and "Convert"
+        layer_two_vertical_two = QVBoxLayout()  # Store the second column w/checkbox and "Open in File Browser"
 
-        layer_three = QHBoxLayout()
-        #         login_form_layout.setFormAlignment(Qt.AlignCenter)
-        # layer_three.setFormAlignment()
+        layer_three = QHBoxLayout()  # Conversion process state
         vertical_layout_parent = QVBoxLayout()
 
         # Parent widget
@@ -118,10 +126,12 @@ class MainWindow(QMainWindow):
 
     # Prompts user to select a folder, stores the given folder path and displays chosen path to user
     def select_folder_prompt(self):
-
-        # ToDo: Clear items and repopulate with other set of items after selecting a new folder.
+        #  Clear self.image_list and QListWidget to prepare for newly selected folder.
         self.image_list.clear()
         self.image_paths_list_widget.clear()
+
+        # print("checkState() is: " + str(self.create_new_folder_checkbox.checkState()))
+        # print("isChecked() is: " + str(self.delete_original_files_checkbox.isChecked()))
 
         # Append a "/" otherwise it will mix the folder name and containing image file together
         directory = str(QFileDialog.getExistingDirectory(self, "Select Directory")) + "/"
@@ -136,19 +146,16 @@ class MainWindow(QMainWindow):
         # Populated the QListWindow() with the update self.image_list field
         self.image_paths_list_widget.addItems(self.image_list)
 
-
     # Given a path name, will open it in the Folder browser app
     def open_folder(self):
         subprocess.call(["open", "-R", self.directory_path_name])
 
     # Given the current state of the directory_path_name folder, will scan for image files in that folder
-    # Just scans .jpg for now
     def scan_for_jpg_file_paths(self):
         image_list = []
 
         for root, dirs, files in os.walk(self.directory_path_name, topdown=True):
             for filename in files:
-
                 if '.jpeg' or '.jpg' or '.webp' or '.gif' or '.icns' in filename:
                     if '.png' not in filename:
                         # print("Added : " + filename + " to our conversion list")
@@ -160,7 +167,6 @@ class MainWindow(QMainWindow):
         return image_list
 
     # Given a non-empty folder path, converts all jpg images in it to png.
-    # ToDo: Selecting a directory and display a window showing contents
     # Todo: Store png images in a new folder?
     # ToDo: Add a "Delete images after converting?"
     # ToDo: Add functionality for checkboxes
@@ -168,30 +174,41 @@ class MainWindow(QMainWindow):
     # In other words, image_list is a field in the MainWindow subclass, and is update after selecting the folder, and
     #   called before calling this function.
     def convert_folder_to_png(self):
-
         self.conversion_finished_or_error_label.setText("Converting")
-
-        # Get list of image files in the given folder
-        # image_list = self.scan_for_jpg_file_paths()
-
         # Progress bar depends on independent variable, length of image list = x
-
         if len(self.image_list) > 0:
-            self.conversion_finished_or_error_label.setText("...")
-            # Convert images
-            for image_path in self.image_list:
-                # Get absolute path
-                abs_path = os.path.abspath(image_path)
-                if ".DS_Store" not in abs_path:
-                    # Save as png
-                    # print("Converting  " + abs_path + "to png" )
-                    image_to_png = Image.open(abs_path)
-                    image_to_png.save(rename_to_png(abs_path))
-
+            self.convert_images_to_png()
             self.conversion_finished_or_error_label.setText("Conversion finished")
-
         if len(self.image_list) <= 0:
             self.conversion_finished_or_error_label.setText("There are no image files in this folder")
+
+    # This will be called after a folder has been selected and the "Convert to PNG" button has been pressed
+    def convert_images_to_png(self):
+        self.conversion_finished_or_error_label.setText("...")
+        # Convert images
+        # ToDo : Put the checkbox logic here
+
+        user_wanted_png_in_new_folder = self.create_new_folder_checkbox.isChecked()
+        converted_png_folder_name = ""
+
+        if user_wanted_png_in_new_folder:
+            converted_png_folder_name = self.directory_path_name + "Converted PNG Files/"
+            print("Created PNG folder name: " + converted_png_folder_name) #  /Users/antoniogurrola-beltran/Desktop/testFolder/imagetestfolder/Converted PNG Files/
+            os.mkdir(converted_png_folder_name)
+
+
+        for image_path in self.image_list:
+            # Get absolute path
+            absolute_image_path = os.path.abspath(image_path)
+            if ".DS_Store" not in absolute_image_path:  # Mac adds .DS_Store, just a way to ignore these pesky files
+                unconverted_image = Image.open(absolute_image_path)  # Image object
+                if user_wanted_png_in_new_folder:  # If the user wanted to store converted PNGS in a folder
+                    name_and_extension_of_image = extract_image_name_and_extension(absolute_image_path)
+                    # Add the image name and extensions s.t. they end up in the folder
+                    image_path_stored_in_converted_png_folder = converted_png_folder_name + name_and_extension_of_image
+                    unconverted_image.save(rename_image_path_to_png(image_path_stored_in_converted_png_folder))
+                else:
+                    unconverted_image.save(rename_image_path_to_png(absolute_image_path))
 
 
 app = QApplication(sys.argv)
