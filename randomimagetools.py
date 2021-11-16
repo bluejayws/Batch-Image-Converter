@@ -21,12 +21,12 @@ def rename_image_path_to_png(path):
     new_path = split_file_at_dot[0] + "_PNG.png"
     return new_path
 
+
 # Given a filepath to an image, will extract the filename and it's extension
 # Used for storing PNG files when the "Create new folder?" checkbox is checked
-def extract_image_name_and_extension(path) :
+def extract_image_name_and_extension(path):
     split_file_at_slash = path.split('/')
-    print("EXTRACTED: " + split_file_at_slash[len(split_file_at_slash)-1])
-    return split_file_at_slash[len(split_file_at_slash)-1]
+    return split_file_at_slash[len(split_file_at_slash) - 1]
 
 
 class MainWindow(QMainWindow):
@@ -130,9 +130,6 @@ class MainWindow(QMainWindow):
         self.image_list.clear()
         self.image_paths_list_widget.clear()
 
-        # print("checkState() is: " + str(self.create_new_folder_checkbox.checkState()))
-        # print("isChecked() is: " + str(self.delete_original_files_checkbox.isChecked()))
-
         # Append a "/" otherwise it will mix the folder name and containing image file together
         directory = str(QFileDialog.getExistingDirectory(self, "Select Directory")) + "/"
         # Update QLabel to new directory, and store it in self for future use
@@ -158,7 +155,6 @@ class MainWindow(QMainWindow):
             for filename in files:
                 if '.jpeg' or '.jpg' or '.webp' or '.gif' or '.icns' in filename:
                     if '.png' not in filename:
-                        # print("Added : " + filename + " to our conversion list")
                         absolute_path = self.directory_path_name + filename
                         # Avoid adding duplicates
                         if absolute_path not in image_list:
@@ -188,27 +184,35 @@ class MainWindow(QMainWindow):
         # Convert images
         # ToDo : Put the checkbox logic here
 
+        # Check if user wanted images stored in a new folder
+        # Check if user wanted to delete original images after conversion
+        # Placeholder for converted_PNG folder
         user_wanted_png_in_new_folder = self.create_new_folder_checkbox.isChecked()
+        user_wanted_unconverted_image_deleted = self.delete_original_files_checkbox.isChecked()
         converted_png_folder_name = ""
 
+        # Create folder if user wanted converted images stored in a new folder
         if user_wanted_png_in_new_folder:
             converted_png_folder_name = self.directory_path_name + "Converted PNG Files/"
-            print("Created PNG folder name: " + converted_png_folder_name) #  /Users/antoniogurrola-beltran/Desktop/testFolder/imagetestfolder/Converted PNG Files/
             os.mkdir(converted_png_folder_name)
-
 
         for image_path in self.image_list:
             # Get absolute path
             absolute_image_path = os.path.abspath(image_path)
             if ".DS_Store" not in absolute_image_path:  # Mac adds .DS_Store, just a way to ignore these pesky files
                 unconverted_image = Image.open(absolute_image_path)  # Image object
-                if user_wanted_png_in_new_folder:  # If the user wanted to store converted PNGS in a folder
+                if user_wanted_png_in_new_folder:
+                    # Get just the image name and extension
                     name_and_extension_of_image = extract_image_name_and_extension(absolute_image_path)
-                    # Add the image name and extensions s.t. they end up in the folder
+                    # Append image name and extension to the converted image folder path
                     image_path_stored_in_converted_png_folder = converted_png_folder_name + name_and_extension_of_image
+                    # Store in converted image folder path
                     unconverted_image.save(rename_image_path_to_png(image_path_stored_in_converted_png_folder))
                 else:
                     unconverted_image.save(rename_image_path_to_png(absolute_image_path))
+
+                if user_wanted_unconverted_image_deleted:
+                    os.remove(absolute_image_path)
 
 
 app = QApplication(sys.argv)
