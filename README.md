@@ -1,4 +1,4 @@
-## Random Image Tools 📸 🔨
+## Batch Image Converter 📸 🔨
 ____
 
 ### Batch Conversion
